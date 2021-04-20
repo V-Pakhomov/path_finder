@@ -84,10 +84,22 @@ class Field:
                     pygame.display.set_caption(self.captions[self.algo_num % len(self.captions)])
                     logger.debug(f'current mode: {self.curr_mode}')
                 elif event.type == pygame.MOUSEBUTTONDOWN:
+                    logger.debug(event.button)
                     if event.button == pygame.BUTTON_RIGHT:
                         self.__clear_square(*self.__square_coordinate(*event.pos))
                     elif event.button == pygame.BUTTON_LEFT:
                         self.__set_square(*self.__square_coordinate(*event.pos))
+                elif event.type == pygame.MOUSEMOTION:
+                    try:
+                        l, _, r = event.buttons
+                    except:
+                        continue
+                    if l + r != 1:
+                        continue
+                    if l:
+                        self.__set_square(*self.__square_coordinate(*event.pos))
+                    elif r:
+                        self.__clear_square(*self.__square_coordinate(*event.pos))
                 if event.type == pygame.QUIT:
                     self.running = False
 

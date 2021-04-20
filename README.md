@@ -1,5 +1,5 @@
 # path_finder
-***path finder algorithms with visualisation on pygame***
+***visualization of pathfinding algorithms with pygame***
 
 ## hotkeys
 * **S**: choose start square
