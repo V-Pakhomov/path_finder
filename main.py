@@ -25,7 +25,7 @@ class Field:
     captions = ('BFS', 'Dijkstra', 'Greedy', 'A*')
     algo_num = 0
     modes = {
-        pygame.K_0: 'wall',
+        pygame.K_w: 'wall',
         pygame.K_s: 'start',
         pygame.K_e: 'end'
     }
@@ -36,6 +36,10 @@ class Field:
     def __init__(self, width, height):
         self.width = width
         self.height = height
+        self.nodes = {}
+        for x in range(width):
+            for y in range(height):
+                self.nodes[x, y] = 1
         self.__init_pygame_field()
 
     def __init_pygame_field(self):
@@ -64,12 +68,6 @@ class Field:
         logger.debug(f'{x}, {y}')
         rect = pygame.Rect(x + 1, y + 1, self.square_size - 1, self.square_size - 1)
         pygame.draw.rect(self.screen, color, rect)
-
-    def configure(self):
-        pass
-
-    def solve(self):
-        pass
 
     def main_loop(self):
         while self.running:
@@ -101,19 +99,25 @@ class Field:
     def __set_square(self, x, y):
         logger.debug(f'{x}, {y}')
         if self.curr_mode == 'start':
-            if (x, y) == self.end or (x, y) in self.walls:
+            if (x, y) in (*self.walls, self.end):
                 return
             if self.start:
                 self.__clear_square(*self.start)
             self.start = (x, y)
             self.__change_square_color(x, y, 'blue')
         elif self.curr_mode == 'end':
-            if (x, y) == self.start or (x, y) in self.walls:
+            if (x, y) in (*self.walls, self.start):
                 return
             if self.end:
                 self.__clear_square(*self.end)
             self.end = (x, y)
             self.__change_square_color(x, y, 'red')
+        elif self.curr_mode == 'wall':
+            if (x, y) in (self.start, self.end, *self.walls):
+                return
+            self.walls.append((x, y))
+            self.__change_square_color(x, y, 'black')
+
 
     @caller
     def __clear_square(self, x, y):

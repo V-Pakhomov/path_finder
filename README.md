@@ -1,10 +1,16 @@
 # path_finder
-path finder algorithms with visualisation
+***path finder algorithms with visualisation on pygame***
 
-# hotkeys
-* s - choose start square
-* e - choose end square
-* 0 - draw walls
-* 2-9 - draw squares with this weight
-* arrows - change path finding algorithm (at screen caption)
-* right mouse button - clear square
+## hotkeys
+* **S**: choose start square
+* **E**: choose end square
+* **W**: draw walls
+* **2-9**: draw squares with the appropriate weight
+* **RMB**: clear square
+* **ARROWS**: change path finding algorithm (at screen caption)
+
+## algorithms
+* **BFS**
+* **Dijkstra**
+* **Greedy**
+* **A\***
