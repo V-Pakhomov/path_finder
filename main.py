@@ -1,6 +1,7 @@
 import pygame
 import time
 from loguru import logger
+from square import Square, default_colors
 
 
 def caller(func):
@@ -14,6 +15,7 @@ def caller(func):
 
 class Field:
 
+    nodes = {}
     walls = []
     start = None
     end = None
@@ -36,40 +38,33 @@ class Field:
     def __init__(self, width, height):
         self.width = width
         self.height = height
-        self.nodes = {}
-        for x in range(width):
-            for y in range(height):
-                self.nodes[x, y] = 1
         self.__init_pygame_field()
+        self.__reset_screen()
 
     def __init_pygame_field(self):
         pygame.init()
         user_screen_info = pygame.display.Info()
         self.clock = pygame.time.Clock()
-        self.square_size = int(min(user_screen_info.current_w * 0.2 // self.width,
-                                   user_screen_info.current_h * 0.2 // self.height))
+        self.square_size = int(min(user_screen_info.current_w * 0.8 // self.width,
+                                   user_screen_info.current_h * 0.8 // self.height))
         pygame.display.set_caption(self.captions[0])
         self.screen = pygame.display.set_mode((self.square_size * self.width, self.square_size * self.height))
+        for y in range(self.height):
+            for x in range(self.width):
+                self.nodes[x, y] = Square(x, y, self.square_size, self.screen)
+
+    def __reset_screen(self):
+        self.start = None
+        self.end = None
+        self.walls = []
         self.screen.fill('white')
-        for i in range(0, self.height * self.square_size, self.square_size):
-            for j in range(0, self.width * self.square_size, self.square_size):
-                rect = pygame.Rect(j + 1, i + 1, self.square_size - 1, self.square_size - 1)
-                pygame.draw.rect(self.screen, 'grey', rect)
+        for square in self.nodes.values():
+            square.reset()
 
     def __square_coordinate(self, x, y):
         return int(x // self.square_size), int(y // self.square_size)
 
-    def __left_top_corner_square_coordinate(self, x, y):
-        return x * self.square_size, y * self.square_size
-
-    @caller
-    def __change_square_color(self, x, y, color):
-        x, y = self.__left_top_corner_square_coordinate(x, y)
-        logger.debug(f'{x}, {y}')
-        rect = pygame.Rect(x + 1, y + 1, self.square_size - 1, self.square_size - 1)
-        pygame.draw.rect(self.screen, color, rect)
-
-    def main_loop(self):
+    def configure(self):
         while self.running:
             self.clock.tick(self.fps)
 
@@ -84,11 +79,12 @@ class Field:
                     pygame.display.set_caption(self.captions[self.algo_num % len(self.captions)])
                     logger.debug(f'current mode: {self.curr_mode}')
                 elif event.type == pygame.MOUSEBUTTONDOWN:
+                    x, y = self.__square_coordinate(*event.pos)
                     logger.debug(event.button)
                     if event.button == pygame.BUTTON_RIGHT:
-                        self.__clear_square(*self.__square_coordinate(*event.pos))
+                        self.__clear_square(x, y)
                     elif event.button == pygame.BUTTON_LEFT:
-                        self.__set_square(*self.__square_coordinate(*event.pos))
+                        self.__set_square(x, y)
                 elif event.type == pygame.MOUSEMOTION:
                     try:
                         l, _, r = event.buttons
@@ -110,38 +106,43 @@ class Field:
     @caller
     def __set_square(self, x, y):
         logger.debug(f'{x}, {y}')
+        square = self.nodes[x, y]
         if self.curr_mode == 'start':
-            if (x, y) in (*self.walls, self.end):
+            if square in (*self.walls, self.end):
                 return
             if self.start:
-                self.__clear_square(*self.start)
-            self.start = (x, y)
-            self.__change_square_color(x, y, 'blue')
+                self.start.reset()
+            square.color = default_colors['start']
+            self.start = square
         elif self.curr_mode == 'end':
-            if (x, y) in (*self.walls, self.start):
+            if square in (*self.walls, self.start):
                 return
             if self.end:
-                self.__clear_square(*self.end)
-            self.end = (x, y)
-            self.__change_square_color(x, y, 'red')
+                self.end.reset()
+            square.color = default_colors['end']
+            self.end = square
         elif self.curr_mode == 'wall':
-            if (x, y) in (self.start, self.end, *self.walls):
+            if square in (self.start, self.end, *self.walls):
                 return
-            self.walls.append((x, y))
-            self.__change_square_color(x, y, 'black')
-
+            square.color = default_colors['wall']
+            self.walls.append(square)
 
     @caller
     def __clear_square(self, x, y):
-        if self.start == (x, y):
+        square = self.nodes[x, y]
+        if self.start == square:
             self.start = None
-        elif self.end == (x, y):
+        elif self.end == square:
             self.end = None
-        if (x, y) in self.walls:
-            self.walls.remove((x, y))
-        self.__change_square_color(x, y, 'grey')
+        if square in self.walls:
+            self.walls.remove(square)
+        square.reset()
+
+    def run_algorithm(self):
+        pass
 
 
 if __name__ == '__main__':
     field = Field(16, 9)
-    field.main_loop()
+    field.configure()
+    field.run_algorithm()
