@@ -6,7 +6,7 @@ from square import Square, default_colors
 
 def caller(func):
     def wrapper(*args, **kwargs):
-        logger.debug(f'{func.__name__} is called')
+        # logger.debug(f'{func.__name__} is called')
         result = func(*args, **kwargs)
         return result
 
@@ -57,7 +57,7 @@ class Field:
         self.start = None
         self.end = None
         self.walls = []
-        self.screen.fill('white')
+        self.screen.fill(default_colors['field'])
         for square in self.nodes.values():
             square.reset()
 
@@ -69,18 +69,28 @@ class Field:
             self.clock.tick(self.fps)
 
             for event in pygame.event.get():
+
+                if event.type == pygame.QUIT:
+                    self.running = False
+                    pygame.quit()
+                    exit()
+
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_RIGHT:
+                    if event.key == pygame.K_RETURN:
+                        return
+                    if event.key == pygame.K_ESCAPE:
+                        self.__reset_screen()
+                    elif event.key == pygame.K_RIGHT:
                         self.algo_num += 1
                     elif event.key == pygame.K_LEFT:
                         self.algo_num -= 1
                     elif event.key in self.modes:
                         self.curr_mode = self.modes[event.key]
                     pygame.display.set_caption(self.captions[self.algo_num % len(self.captions)])
-                    logger.debug(f'current mode: {self.curr_mode}')
+                    # logger.debug(f'current mode: {self.curr_mode}')
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     x, y = self.__square_coordinate(*event.pos)
-                    logger.debug(event.button)
+                    # logger.debug(event.button)
                     if event.button == pygame.BUTTON_RIGHT:
                         self.__clear_square(x, y)
                     elif event.button == pygame.BUTTON_LEFT:
@@ -96,38 +106,40 @@ class Field:
                         self.__set_square(*self.__square_coordinate(*event.pos))
                     elif r:
                         self.__clear_square(*self.__square_coordinate(*event.pos))
-                if event.type == pygame.QUIT:
-                    self.running = False
 
             pygame.display.flip()
 
-        pygame.quit()
 
-    @caller
+
+    # @caller
     def __set_square(self, x, y):
-        logger.debug(f'{x}, {y}')
+        # logger.debug(f'{x}, {y}')
         square = self.nodes[x, y]
+        if square in self.walls:
+            return
         if self.curr_mode == 'start':
-            if square in (*self.walls, self.end):
+            if square == self.end:
                 return
             if self.start:
                 self.start.reset()
-            square.color = default_colors['start']
             self.start = square
         elif self.curr_mode == 'end':
-            if square in (*self.walls, self.start):
+            if square == self.start:
                 return
             if self.end:
                 self.end.reset()
-            square.color = default_colors['end']
             self.end = square
         elif self.curr_mode == 'wall':
-            if square in (self.start, self.end, *self.walls):
+            if square in (self.start, self.end):
                 return
-            square.color = default_colors['wall']
             self.walls.append(square)
+        else:
+            if square in (self.start, self.end):
+                return
+            square.weight = self.curr_mode
+        square.color = default_colors[self.curr_mode]
 
-    @caller
+    # @caller
     def __clear_square(self, x, y):
         square = self.nodes[x, y]
         if self.start == square:
@@ -139,10 +151,14 @@ class Field:
         square.reset()
 
     def run_algorithm(self):
-        pass
+        if not self.start or not self.end:
+            logger.warning('There must be a start and an end on the field ')
+            return
+        # logger.debug('A-A-A-A-ALGORITHM!!!!')
 
 
 if __name__ == '__main__':
-    field = Field(16, 9)
-    field.configure()
-    field.run_algorithm()
+    field = Field(50, 30)
+    for _ in range(10):
+        field.configure()
+        field.run_algorithm()
