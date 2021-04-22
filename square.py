@@ -4,11 +4,12 @@ from loguru import logger
 
 default_colors = {
     'field': '00 00 00',
-    'square': 'FF FF FF',
+    'square': '80 80 80',
     'start': '00 00 FF',
     'end': 'FF 00 00',
     'wall': '00 00 00',
-    'current': 'FF FF 00',
+    'path': 'FF FF 00',
+    1: '80 80 80',
     2: 'FF DF DC',
     3: 'F5 B2 AC',
     4: 'FF C4 6B',
@@ -21,7 +22,6 @@ default_colors = {
 
 for k, v in default_colors.items():
     default_colors[k] = tuple(map(lambda x: int(x, 16), v.split()))
-logger.debug(default_colors)
 
 
 class Square:
@@ -29,6 +29,8 @@ class Square:
     __color = default_colors['square']
     __weight = 1
     __path_to_start = float('inf')
+    __dist_to_end = float('inf')
+    parent = None
 
     def __init__(self, x, y, size, screen):
         self.x = x
@@ -41,10 +43,11 @@ class Square:
         x, y = self.__screen_coordinates
         self.__text_rect.topright = (x + size - 1, y + 1)
 
-    def draw(self, algorithm=None):
+    def draw(self, color=None):
+        color = color or self.__color
         x, y = self.__screen_coordinates
         rect = pygame.Rect(x + 1, y + 1, self.__size - 1, self.__size - 1)
-        pygame.draw.rect(self.screen, self.__color, rect)
+        pygame.draw.rect(self.screen, color, rect)
         if self.__weight > 1:
             self.screen.blit(self.__text_obj, self.__text_rect)
 
@@ -88,3 +91,26 @@ class Square:
 
     def distance(self, other):
         return ((self.x - other.x)**2 + (self.y - other.y)**2) ** 0.5
+
+    def neighbours(self, field):
+        neighbours = []
+        for diff in (-1, 1):
+            if 0 <= self.x + diff < field.width and field.nodes[(self.x + diff, self.y)] not in field.walls:
+                neighbours.append((self.x + diff, self.y))
+            if 0 <= self.y + diff < field.height and field.nodes[(self.x, self.y + diff)] not in field.walls:
+                neighbours.append((self.x, self.y + diff))
+        return neighbours
+
+    def light(self):
+        r, g, b = self.__color
+        r = (255 + r) // 2
+        g = (255 + g) // 2
+        b = (255 + b) // 2
+        self.draw((r, g, b))
+
+    def dark(self):
+        r, g, b = self.__color
+        r //= 2
+        g //= 2
+        b //= 2
+        self.draw((r, g, b))

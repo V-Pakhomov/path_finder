@@ -2,6 +2,7 @@ import pygame
 import time
 from loguru import logger
 from square import Square, default_colors
+from bfs import bfs
 
 
 def caller(func):
@@ -65,6 +66,7 @@ class Field:
         return int(x // self.square_size), int(y // self.square_size)
 
     def configure(self):
+        self.fps = 200
         while self.running:
             self.clock.tick(self.fps)
 
@@ -109,8 +111,6 @@ class Field:
 
             pygame.display.flip()
 
-
-
     # @caller
     def __set_square(self, x, y):
         # logger.debug(f'{x}, {y}')
@@ -121,13 +121,13 @@ class Field:
             if square == self.end:
                 return
             if self.start:
-                self.start.reset()
+                self.start.color = default_colors[self.start.weight]
             self.start = square
         elif self.curr_mode == 'end':
             if square == self.start:
                 return
             if self.end:
-                self.end.reset()
+                self.end.color = default_colors[self.end.weight]
             self.end = square
         elif self.curr_mode == 'wall':
             if square in (self.start, self.end):
@@ -150,11 +150,73 @@ class Field:
             self.walls.remove(square)
         square.reset()
 
+    def __print_path(self):
+        square = self.end.parent
+        while square and square != self.start:
+            square.draw(default_colors['path'])
+            square = square.parent
+
     def run_algorithm(self):
         if not self.start or not self.end:
             logger.warning('There must be a start and an end on the field ')
             return
-        # logger.debug('A-A-A-A-ALGORITHM!!!!')
+
+        logger.debug(list(self.nodes.keys()))
+
+        self.fps = 15
+        caption = self.captions[self.algo_num % len(self.captions)]
+        pause = False
+        algorithm_duration = 0
+        start = time.time()
+
+        current_squares = [self.start]
+        used_squares = []
+        algorithm = {'BFS': bfs}[caption]
+        done = False
+
+        while self.running:
+            self.clock.tick(self.fps)
+
+            if not done:
+                if pause:
+                    pygame.display.set_caption(f'{caption} ({round(algorithm_duration, 3)})')
+                else:
+                    pygame.display.set_caption(f'{caption} ({round(algorithm_duration + time.time() - start, 3)})')
+
+            for event in pygame.event.get():
+
+                if event.type == pygame.QUIT:
+                    self.running = False
+                    pygame.quit()
+                    exit()
+
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN and done:
+                        return
+                    if event.key == pygame.K_SPACE and not done:
+                        pause = not pause
+                        if pause:
+                            algorithm_duration += time.time() - start
+                        else:
+                            start = time.time()
+
+            if pause or done:
+                continue
+
+            current_squares = algorithm(self, current_squares, used_squares)
+            for square in current_squares:
+                if square != self.end:
+                    square.light()
+            if self.end in used_squares or not current_squares:
+                self.__print_path()
+                done = True
+
+            pygame.display.flip()
+
+    def restore_configure(self):
+        for square in self.nodes.values():
+            square.parent = None
+            square.draw()
 
 
 if __name__ == '__main__':
@@ -162,3 +224,4 @@ if __name__ == '__main__':
     for _ in range(10):
         field.configure()
         field.run_algorithm()
+        field.restore_configure()
