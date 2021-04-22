@@ -1,17 +1,13 @@
-from square import Square
-
-
 def bfs(field, current_squares, used_squares):
-    new_current_squares = []
-    for square in current_squares:
-        for sq in square.neighbours(field):
-            sq = field.nodes[sq]
-            if (sq not in new_current_squares and
-                    sq not in current_squares and
-                    sq not in used_squares):
-                new_current_squares.append(sq)
-                sq.parent = square
-        used_squares.append(square)
-        if square not in (field.start, field.end):
-            square.dark()
-    return new_current_squares
+    square = current_squares.pop(0)
+    for sq in square.neighbours(field):
+        sq = field.nodes[sq]
+        if sq not in current_squares and sq not in used_squares:
+            current_squares.append(sq)
+            sq.parent = square
+            sq.path_to_start = square.path_to_start + sq.weight
+            if sq != field.end:
+                sq.light()
+    used_squares.append(square)
+    if square not in (field.start, field.end):
+        square.dark()

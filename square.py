@@ -28,8 +28,8 @@ class Square:
 
     __color = default_colors['square']
     __weight = 1
-    __path_to_start = float('inf')
-    __dist_to_end = float('inf')
+    path_to_start = float('inf')
+    dist_to_end = float('inf')
     parent = None
 
     def __init__(self, x, y, size, screen):
@@ -114,3 +114,9 @@ class Square:
         g //= 2
         b //= 2
         self.draw((r, g, b))
+
+    def __str__(self):
+        return f'x={self.x}, y={self.y}, to_start={self.path_to_start}, to_end={self.dist_to_end}'
+
+    def __repr__(self):
+        return f'({self.__str__()})'
