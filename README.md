@@ -1,5 +1,6 @@
 # path_finder
 ***visualization of pathfinding algorithms with pygame***
+***you can configure program by editing configuration.ini***
 
 ## hotkeys
 * **ESC**: exit
