@@ -1,56 +1,47 @@
 import pygame
 import time
 from loguru import logger
-from square import Square, default_colors
-from bfs import bfs
-from dijkstra import dijkstra
-from greedy import greedy
-from A_star import A_star
-
-
-def caller(func):
-    def wrapper(*args, **kwargs):
-        # logger.debug(f'{func.__name__} is called')
-        result = func(*args, **kwargs)
-        return result
-
-    return wrapper
+from square import Square
+from settings import colors, field as f
+from algorithms import bfs, dijkstra, greedy, A_star
 
 
 class Field:
 
-    nodes = {}
-    walls = []
-    start = None
-    end = None
-    screen = None
-    clock = None
-    running = True
-    fps = 500
-    square_size = 0
-    captions = ('BFS', 'Greedy', 'Dijkstra', 'A*')
-    algo_num = 0
-    modes = {
-        pygame.K_w: 'wall',
-        pygame.K_s: 'start',
-        pygame.K_e: 'end'
-    }
-    for k in range(2, 10):
-        modes[pygame.K_0 + k] = k
-    curr_mode = 'start'
-
-    def __init__(self, width, height):
-        self.width = width
-        self.height = height
+    def __init__(self):
+        self.width = f['width']
+        self.height = f['height']
+        self.__init__attributes__()
         self.__init_pygame_field()
         self.__reset_screen()
+
+    def __init__attributes__(self):
+        self.nodes = {}
+        self.walls = []
+        self.start = None
+        self.end = None
+        self.screen = None
+        self.clock = None
+        self.running = True
+        self.fps = f['fps']
+        self.square_size = 0
+        self.captions = ('BFS', 'Greedy', 'Dijkstra', 'A*')
+        self.algo_num = 0
+        self.modes = {
+            pygame.K_w: 'wall',
+            pygame.K_s: 'start',
+            pygame.K_e: 'end'
+        }
+        for k in range(2, 10):
+            self.modes[pygame.K_0 + k] = k
+        self.curr_mode = 'start'
 
     def __init_pygame_field(self):
         pygame.init()
         user_screen_info = pygame.display.Info()
         self.clock = pygame.time.Clock()
-        self.square_size = int(min(user_screen_info.current_w * 0.8 // self.width,
-                                   user_screen_info.current_h * 0.8 // self.height))
+        self.square_size = int(min(user_screen_info.current_w * 0.9 // self.width,
+                                   user_screen_info.current_h * 0.9 // self.height))
         pygame.display.set_caption(self.captions[0])
         self.screen = pygame.display.set_mode((self.square_size * self.width, self.square_size * self.height))
         for y in range(self.height):
@@ -61,7 +52,7 @@ class Field:
         self.start = None
         self.end = None
         self.walls = []
-        self.screen.fill(default_colors['field'])
+        self.screen.fill(colors['wall'])
         for square in self.nodes.values():
             square.reset()
 
@@ -75,14 +66,16 @@ class Field:
             for event in pygame.event.get():
 
                 if event.type == pygame.QUIT:
-                    self.running = False
                     pygame.quit()
                     exit()
 
                 if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        pygame.quit()
+                        exit()
                     if event.key == pygame.K_RETURN:
                         return
-                    if event.key == pygame.K_ESCAPE:
+                    if event.key == pygame.K_BACKSPACE:
                         self.__reset_screen()
                     elif event.key == pygame.K_RIGHT:
                         self.algo_num += 1
@@ -91,10 +84,8 @@ class Field:
                     elif event.key in self.modes:
                         self.curr_mode = self.modes[event.key]
                     pygame.display.set_caption(self.captions[self.algo_num % len(self.captions)])
-                    # logger.debug(f'current mode: {self.curr_mode}')
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     x, y = self.__square_coordinate(*event.pos)
-                    # logger.debug(event.button)
                     if event.button == pygame.BUTTON_RIGHT:
                         self.__clear_square(x, y)
                     elif event.button == pygame.BUTTON_LEFT:
@@ -113,9 +104,7 @@ class Field:
 
             pygame.display.flip()
 
-    # @caller
     def __set_square(self, x, y):
-        # logger.debug(f'{x}, {y}')
         square = self.nodes[x, y]
         if square in self.walls:
             return
@@ -123,13 +112,13 @@ class Field:
             if square == self.end:
                 return
             if self.start:
-                self.start.color = default_colors[self.start.weight]
+                self.start.color = colors[self.start.cost]
             self.start = square
         elif self.curr_mode == 'end':
             if square == self.start:
                 return
             if self.end:
-                self.end.color = default_colors[self.end.weight]
+                self.end.color = colors[self.end.cost]
             self.end = square
         elif self.curr_mode == 'wall':
             if square in (self.start, self.end):
@@ -138,10 +127,9 @@ class Field:
         else:
             if square in (self.start, self.end):
                 return
-            square.weight = self.curr_mode
-        square.color = default_colors[self.curr_mode]
+            square.cost = self.curr_mode
+        square.color = colors[self.curr_mode]
 
-    # @caller
     def __clear_square(self, x, y):
         square = self.nodes[x, y]
         if self.start == square:
@@ -152,13 +140,13 @@ class Field:
             self.walls.remove(square)
         square.reset()
 
-    def __print_path(self):
+    def __path(self):
+        path = []
         square = self.end.parent
         while square and square != self.start:
-            square.draw(default_colors['path'])
+            path.append(square)
             square = square.parent
-            time.sleep(0.01)
-            pygame.display.flip()
+        return path
 
     def run_algorithm(self):
         if not self.start or not self.end:
@@ -190,11 +178,13 @@ class Field:
             for event in pygame.event.get():
 
                 if event.type == pygame.QUIT:
-                    self.running = False
                     pygame.quit()
                     exit()
 
                 if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        pygame.quit()
+                        exit()
                     if event.key == pygame.K_RETURN:
                         return
                     if event.key == pygame.K_SPACE and not done:
@@ -205,16 +195,20 @@ class Field:
                             start = time.time()
 
             if pause or done:
+                self.clock.tick(f['path_drawing_fps'])
+                if done and path:
+                    path.pop().draw(colors['path'])
+                    pygame.display.flip()
                 continue
 
             algorithm(self, current_squares, used_squares)
             if self.end in used_squares or not current_squares:
                 caption = pygame.display.get_caption()[0]
                 if self.end in used_squares:
-                    pygame.display.set_caption(f'{caption} path len = {self.end.path_to_start}')
+                    pygame.display.set_caption(f'{caption} path cost = {self.end.path_to_start}')
                 else:
                     pygame.display.set_caption(f'{caption} path not found')
-                self.__print_path()
+                path = self.__path()
                 done = True
 
             pygame.display.flip()
@@ -223,11 +217,12 @@ class Field:
         for square in self.nodes.values():
             square.parent = None
             square.path_to_start = float('inf')
+            square.dist_to_end = float('inf')
             square.draw()
 
 
 if __name__ == '__main__':
-    field = Field(50, 30)
+    field = Field()
     while True:
         field.configure()
         field.run_algorithm()
