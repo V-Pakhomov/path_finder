@@ -10,6 +10,9 @@ for key in config['Field']:
 
 draw = {}
 for key in config['Draw']:
+    if key == 'font':
+        draw[key] = config['Draw'][key]
+        continue
     try:
         draw[key] = int(config['Draw'][key])
     except ValueError:
@@ -17,8 +20,6 @@ for key in config['Draw']:
             draw[key] = {'True': True, 'False': False}[config['Draw'][key]]
         except KeyError:
             raise ValueError(f'({key} = {config["Draw"][key]}): {key} should be True or False')
-
-print(draw)
 
 colors = {}
 for key in config['Colors']:

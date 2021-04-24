@@ -42,19 +42,24 @@ class Field:
         self.clock = pygame.time.Clock()
         self.square_size = int(min(user_screen_info.current_w * 0.9 // self.width,
                                    user_screen_info.current_h * 0.9 // self.height))
+        self.font = pygame.font.SysFont(draw['font'], self.square_size)
         pygame.display.set_caption(self.captions[0])
         self.screen = pygame.display.set_mode((self.square_size * self.width, self.square_size * self.height))
         for y in range(self.height):
             for x in range(self.width):
-                self.nodes[x, y] = Square(x, y, self.square_size, self.screen)
+                self.nodes[x, y] = Square(x, y, self.square_size, self.screen, self.font)
 
     def __reset_screen(self):
         self.start = None
         self.end = None
         self.walls = []
-        self.screen.fill(colors['wall'])
-        for square in self.nodes.values():
-            square.reset()
+        self.screen.fill(colors[1])
+        w, h = pygame.display.get_window_size()
+        for i in range(self.width):
+            pygame.draw.line(self.screen, colors['wall'], [i * self.square_size, 0], [i * self.square_size, h])
+        for j in range(self.height):
+            pygame.draw.line(self.screen, colors['wall'], [0, j * self.square_size], [w, j * self.square_size])
+        pygame.display.flip()
 
     def __square_coordinate(self, x, y):
         return int(x // self.square_size), int(y // self.square_size)
@@ -91,10 +96,11 @@ class Field:
                     elif event.button == pygame.BUTTON_LEFT:
                         self.__set_square(x, y)
                 elif event.type == pygame.MOUSEMOTION:
-                    try:
-                        l, _, r = event.buttons
-                    except:
-                        continue
+                    # try:
+                    #     l, _, r = event.buttons
+                    # except ValueError:
+                    #     continue
+                    l, _, r = event.buttons
                     if l + r != 1:
                         continue
                     if l:

@@ -11,12 +11,12 @@ class Square:
     dist_to_end = float('inf')
     parent = None
 
-    def __init__(self, x, y, size, screen):
+    def __init__(self, x, y, size, screen, font):
         self.x = x
         self.y = y
         self.__size = size
         self.screen = screen
-        self.__font = pygame.font.SysFont(None, size)
+        self.__font = font
         self.__text_obj = self.__font.render(str(self.__cost), True, colors['wall'])
         self.__text_rect = self.__text_obj.get_rect()
         x, y = self.__screen_coordinates

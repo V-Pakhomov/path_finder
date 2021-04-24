@@ -5,7 +5,7 @@
 ## hotkeys
 * **ESC**: exit
 ### field configuration
-* **S**: choose start square
+* **S**: choose start square  
 * **E**: choose end square
 * **W**: draw walls
 * **2-9**: draw squares with the appropriate cost
@@ -19,6 +19,6 @@
 
 ## algorithms
 * ***BFS***
-* ***Dijkstra***
 * ***Greedy***
+* ***Dijkstra***
 * ***A\****
