@@ -1,5 +1,5 @@
 import pygame
-from settings import colors
+from settings import colors, draw
 from loguru import logger
 
 
@@ -27,7 +27,7 @@ class Square:
         x, y = self.__screen_coordinates
         rect = pygame.Rect(x + 1, y + 1, self.__size - 1, self.__size - 1)
         pygame.draw.rect(self.screen, color, rect)
-        if self.__cost > 1:
+        if draw['cost'] and self.__cost >= draw['min_cost_to_draw']:
             self.screen.blit(self.__text_obj, self.__text_rect)
 
     @property

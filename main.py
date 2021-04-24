@@ -2,7 +2,7 @@ import pygame
 import time
 from loguru import logger
 from square import Square
-from settings import colors, field as f
+from settings import colors, draw, field as f
 from algorithms import bfs, dijkstra, greedy, A_star
 
 
@@ -129,6 +129,8 @@ class Field:
                 return
             square.cost = self.curr_mode
         square.color = colors[self.curr_mode]
+        if not draw['cost_colored'] and isinstance(self.curr_mode, int):
+            square.color = colors[1]
 
     def __clear_square(self, x, y):
         square = self.nodes[x, y]
