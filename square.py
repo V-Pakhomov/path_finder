@@ -1,6 +1,7 @@
 import pygame
 from settings import colors, draw
 from loguru import logger
+from random import shuffle
 
 
 class Square:
@@ -63,21 +64,25 @@ class Square:
         self.__color = color
         self.draw()
 
-    def reset(self):
+    def reset(self, draw_sq=True):
         self.__cost = 1
         self.__color = colors[1]
-        self.draw()
+        if draw_sq:
+            self.draw()
 
     def distance(self, other):
         return ((self.x - other.x)**2 + (self.y - other.y)**2) ** 0.5
 
-    def neighbours(self, field):
+    def neighbours(self, field, maze=False):
+        dist = (-1, 1) if not maze else (-2, 2)
         neighbours = []
-        for diff in (-1, 1):
+        for diff in dist:
             if 0 <= self.x + diff < field.width and field.nodes[(self.x + diff, self.y)] not in field.walls:
-                neighbours.append((self.x + diff, self.y))
+                neighbours.append(field.nodes[self.x + diff, self.y])
             if 0 <= self.y + diff < field.height and field.nodes[(self.x, self.y + diff)] not in field.walls:
-                neighbours.append((self.x, self.y + diff))
+                neighbours.append(field.nodes[self.x, self.y + diff])
+        if maze:
+            shuffle(neighbours)
         return neighbours
 
     def light(self):

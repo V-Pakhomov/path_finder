@@ -1,7 +1,6 @@
 def main_algorithm(field, current_squares, used_squares, best_square, condition):
     current_squares.remove(best_square)
     for sq in best_square.neighbours(field):
-        sq = field.nodes[sq]
         if condition(sq):
             current_squares.append(sq)
             sq.parent = best_square

@@ -4,6 +4,8 @@ from loguru import logger
 from square import Square
 from settings import colors, draw, field as f
 from algorithms import bfs, dijkstra, greedy, A_star
+from random import randint
+import sys
 
 
 class Field:
@@ -39,6 +41,7 @@ class Field:
     def __init_pygame_field(self):
         pygame.init()
         user_screen_info = pygame.display.Info()
+        logger.info(f'screen: {user_screen_info}')
         self.clock = pygame.time.Clock()
         self.square_size = int(min(user_screen_info.current_w * 0.9 // self.width,
                                    user_screen_info.current_h * 0.9 // self.height))
@@ -54,6 +57,8 @@ class Field:
         self.end = None
         self.walls = []
         self.screen.fill(colors[1])
+        for sq in self.nodes.values():
+            sq.reset(draw_sq=False)
         w, h = pygame.display.get_window_size()
         for i in range(self.width):
             pygame.draw.line(self.screen, colors['wall'], [i * self.square_size, 0], [i * self.square_size, h])
@@ -80,7 +85,9 @@ class Field:
                         exit()
                     if event.key == pygame.K_RETURN:
                         return
-                    if event.key == pygame.K_BACKSPACE:
+                    if event.key == pygame.K_m:
+                        self.__generate_maze()
+                    elif event.key == pygame.K_BACKSPACE:
                         self.__reset_screen()
                     elif event.key == pygame.K_RIGHT:
                         self.algo_num += 1
@@ -228,8 +235,47 @@ class Field:
             square.dist_to_end = float('inf')
             square.draw()
 
+    def __generate_maze(self):
+
+        def recursive(current: Square):
+            self.clock.tick(f['maze_generation_fps'])
+            current.color = colors['maze']
+            pygame.display.flip()
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT or event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    exit()
+
+            used.append(current)
+            for square in current.neighbours(self, maze=True):
+                if square in used:
+                    continue
+                wall_x = (square.x + current.x) // 2
+                wall_y = (square.y + current.y) // 2
+                w_sq = self.nodes[wall_x, wall_y]
+                self.walls.remove(w_sq)
+                w_sq.color = colors['maze']
+                recursive(square)
+                w_sq.color = colors[1]
+            current.color = colors[1]
+            return
+
+        x = randint(0, self.width)
+        y = randint(0, self.height)
+        self.screen.fill(colors['wall'])
+        self.walls = [sq for sq in self.nodes.values() if sq.x % 2 != x % 2 or sq.y % 2 != y % 2]
+        for sq in self.walls:
+            sq.color = colors['wall']
+        used = []
+        recursive(self.nodes[x, y])
+        # for sq in self.nodes.values():
+        #     if sq not in self.walls:
+        #         sq.color = colors[1]
+
 
 if __name__ == '__main__':
+    sys.setrecursionlimit(100000)
     field = Field()
     while True:
         field.configure()

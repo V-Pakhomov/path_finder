@@ -5,6 +5,7 @@
 ## hotkeys
 * **ESC**: exit
 ### field configuration
+* **M**: auto maze generation
 * **S**: choose start square  
 * **E**: choose end square
 * **W**: draw walls
