@@ -41,7 +41,6 @@ class Field:
     def __init_pygame_field(self):
         pygame.init()
         user_screen_info = pygame.display.Info()
-        logger.info(f'screen: {user_screen_info}')
         self.clock = pygame.time.Clock()
         self.square_size = int(min(user_screen_info.current_w * 0.9 // self.width,
                                    user_screen_info.current_h * 0.9 // self.height))
@@ -261,8 +260,8 @@ class Field:
             current.color = colors[1]
             return
 
-        x = randint(0, self.width)
-        y = randint(0, self.height)
+        x = randint(0, self.width - 1)
+        y = randint(0, self.height - 1)
         self.screen.fill(colors['wall'])
         self.walls = [sq for sq in self.nodes.values() if sq.x % 2 != x % 2 or sq.y % 2 != y % 2]
         for sq in self.walls:
