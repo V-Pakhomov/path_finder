@@ -4,6 +4,7 @@
 
 ## installation
 git clone https://github.com/V-Pakhomov/path_finder.git  
+cd path_finder
 pip install -r requirements.txt  
 python main.py  
 
