@@ -2,6 +2,11 @@
 ***visualization of pathfinding algorithms with pygame***  
 ***you can configure program by editing configuration.ini***
 
+## installation
+git clone https://github.com/V-Pakhomov/path_finder.git  
+pip install -r requirements.txt  
+python main.py  
+
 ## hotkeys
 * **ESC**: exit
 ### field configuration
