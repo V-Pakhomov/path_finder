@@ -3,7 +3,7 @@
 ***you can configure program by editing configuration.ini***
 
 ## installation
-git clone https://github.com/V-Pakhomov/path_finder.git  
+git clone https://github.com/V-Pakhomov/path_finder.git path_finder  
 cd path_finder  
 pip install -r requirements.txt  
 python main.py  
